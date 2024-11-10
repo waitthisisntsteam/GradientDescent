@@ -17,6 +17,11 @@ namespace GradientDescent
         ActivationFunction ActivationFunction;
         ErrorFunction ErrorFunction;
 
+        private double Min;
+        private double Max;
+        private double NMin;
+        private double NMax;
+
         public Perceptron(int inputAmount, double learningRate, ErrorFunction errorFunction, ActivationFunction activationFunction)
         {
             Weights = new double[inputAmount];
@@ -26,12 +31,18 @@ namespace GradientDescent
 
             ActivationFunction = activationFunction;
             ErrorFunction = errorFunction;
+
+            //min = min;
+            //max = max;
+            //nmin = nmin;
+            //nmax = nmax;
         }
 
         private double Random(Random random, double min, double max) => (random.NextDouble() * (max - min)) + min;
         public void Randomize(Random random, double min, double max)
         {
-            for (int i = 0; i < Weights.Length; i++) Weights[i] = Random(random, min, max);
+            for (int i = 0; i < Weights.Length; i++) Weights[i] = 0;
+                    //Random(random, min, max);
             Bias = Random(random, min, max);
         }
 
@@ -80,22 +91,41 @@ namespace GradientDescent
             return errorSum / outputs.Length;
         }
 
+        public double Normalize(double num) => (num - Min) / (Max - Min) * (NMax - NMin) + NMin;
+        public double Unnormalize(double num) => (num - NMin) / (NMax - NMin) * (Max - Min) + Min;
+
         public double Train(double[][] inputs, double[] desiredOutputs)
         {
-
             //ADD NORMALIZING
+            //otherwise tanh will always reach the asymptote in the function
 
             Random rand = new Random();
             int chosenIndex = rand.Next(0, Weights.Length + 1);
 
-            int i = 0; //chosen weight
-            int z = 0; //sum of all weight inputs
-            double actualOutput = Compute(inputs)[chosenIndex];
-            double weightPartialDerivative = ErrorFunction.DerivativeFunc(actualOutput, desiredOutputs[i]) * ActivationFunction.DerivativeFunc(Bias + z) * inputs[i][chosenIndex];
-            double biasPartialDerivative = ErrorFunction.DerivativeFunc(actualOutput, desiredOutputs[i]) * ActivationFunction.DerivativeFunc(Bias + z);
+            double[] actualOutputs = Compute(inputs);
+            double sumOfAllWeightInputs = 0;
+            for (int i = 0; i < actualOutputs.Length; i++) sumOfAllWeightInputs += actualOutputs[i];
+            if (chosenIndex < Weights.Length)
+            {
+                double actualOutput = actualOutputs[chosenIndex];
 
-            if (chosenIndex < Weights.Length) Weights[chosenIndex] += LearningRate * -weightPartialDerivative;
-            else Bias += LearningRate * -biasPartialDerivative;
+                double ePrimeOD = ErrorFunction.DerivativeFunc(actualOutput, desiredOutputs[chosenIndex]);
+                double aPrimeZ = ActivationFunction.DerivativeFunc(Bias + sumOfAllWeightInputs);
+                double xI = inputs[chosenIndex][0];
+
+                double weightPartialDerivative = ePrimeOD * aPrimeZ * xI;
+                Weights[chosenIndex] += LearningRate * -weightPartialDerivative;
+            }
+            else
+            {
+                double actualOutput = actualOutputs[0];
+
+                double ePrimeOD = ErrorFunction.DerivativeFunc(actualOutput, desiredOutputs[0]);
+                double aPrimeZ = ActivationFunction.DerivativeFunc(Bias + sumOfAllWeightInputs);
+
+                double biasPartialDerivative = ePrimeOD * aPrimeZ;
+                Bias += LearningRate * -biasPartialDerivative;
+            }
 
             return GetError(inputs, desiredOutputs);
         }
