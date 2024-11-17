@@ -12,16 +12,19 @@ namespace GradientDescent
             ErrorFunction MeanSquared = new ErrorFunction(activationErorrFormulas.MeanSquared, activationErorrFormulas.MeanSquaredD);
             ActivationFunction TanH = new ActivationFunction(activationErorrFormulas.TanH, activationErorrFormulas.TanHD);
 
-            Perceptron gradientDescent = new Perceptron(3, 0.1, MeanSquared, TanH);
+            Perceptron gradientDescent = new Perceptron(3, 0.1, MeanSquared, TanH, 0, 10, 0, 1);
             gradientDescent.Randomize(new Random(), 0, 1);
             double[][] inputs = [[1], [2], [3]];
-            double[] desiredOutputs = [1, 0, 1];
+            double[] desiredOutputs = [10, 0, 10];
 
             double error = 0;
             while (true)
             {
                 error = gradientDescent.Train(inputs, desiredOutputs);
                 Console.WriteLine(error);
+
+                var d = gradientDescent.Compute(inputs);
+                ;
             }
         }
     }
