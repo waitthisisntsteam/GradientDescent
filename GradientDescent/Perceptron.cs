@@ -101,6 +101,8 @@ namespace GradientDescent
             for (int i = 0; i < desiredOutputs.Length; i++) desiredOutputs[i] = Normalize(desiredOutputs[i]);
 
             double[] weightPartialDerivatives = new double[Weights.Length];
+            double biasPartialDerivative = 0;
+
             double[] actualOutputs = Compute(inputs);
             double sumOfAllWeightInputs = 0;
             for (int i = 0; i < actualOutputs.Length; i++) sumOfAllWeightInputs += actualOutputs[i];
@@ -114,15 +116,21 @@ namespace GradientDescent
                     double aPrimeZ = ActivationFunction.DerivativeFunc(Bias + sumOfAllWeightInputs);
                     double xI = inputs[j][0];
 
-                    double weightPartialDerivative = ePrimeOD * aPrimeZ * xI;
-                    weightPartialDerivatives[i] += weightPartialDerivative;
+                    double weightPartialDerivativeResult = ePrimeOD * aPrimeZ * xI;
+                    weightPartialDerivatives[i] += weightPartialDerivativeResult;
                 }
             }
-            double actualOutputB = actualOutputs[0];
-            double ePrimeODB = ErrorFunction.DerivativeFunc(actualOutputB, desiredOutputs[0]);
-            double aPrimeZB = ActivationFunction.DerivativeFunc(Bias + sumOfAllWeightInputs);
 
-            double biasPartialDerivative = ePrimeODB * aPrimeZB;
+            for (int i = 0; i < inputs.Length; i++)
+            {
+                double actualOutputB = actualOutputs[i];
+                double ePrimeODB = ErrorFunction.DerivativeFunc(actualOutputB, desiredOutputs[i]);
+                double aPrimeZB = ActivationFunction.DerivativeFunc(Bias + sumOfAllWeightInputs);
+
+                double biasPartialDerivativeResult = ePrimeODB * aPrimeZB;
+                biasPartialDerivative += biasPartialDerivativeResult;
+            }
+            biasPartialDerivative /= inputs.Length;
 
             Bias += LearningRate * -biasPartialDerivative;
             for (int i = 0; i < Weights.Length; i++) Weights[i] += LearningRate * -weightPartialDerivatives[i];
